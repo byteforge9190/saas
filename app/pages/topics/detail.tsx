@@ -1,12 +1,12 @@
 import * as React from 'react';
-import Grid from 'material-ui/Grid';
-import { observer } from 'mobx-react';
+import Grid from '@material-ui/core/Grid';
 import Router from 'next/router';
+import { observer } from 'mobx-react';
 
 import DiscussionList from '../../components/discussions/DiscussionList';
 import withLayout from '../../lib/withLayout';
 import withAuth from '../../lib/withAuth';
-import { getStore } from '../../lib/store';
+import { Store } from '../../lib/store';
 
 const styleGrid = {
   height: '100%',
@@ -17,14 +17,17 @@ const styleGridItem = {
   borderRight: '0.5px #aaa solid',
 };
 
-const store = getStore();
-
 @observer
-class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
-  static async getInitialProps({ query }) {
+class Topic extends React.Component<{
+  teamSlug: string;
+  topicSlug: string;
+  isServer: boolean;
+  store: Store;
+}> {
+  static getInitialProps({ query, req }) {
     const { teamSlug, topicSlug } = query;
 
-    return { teamSlug, topicSlug };
+    return { teamSlug, topicSlug, isServer: !!req };
   }
 
   componentDidMount() {
@@ -36,7 +39,7 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
   }
 
   changeTopic() {
-    const { teamSlug, topicSlug } = this.props;
+    const { teamSlug, topicSlug, store, isServer } = this.props;
     const { currentTeam } = store;
 
     if (currentTeam.slug !== teamSlug) {
@@ -55,8 +58,6 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
       return;
     }
 
-    store.deleteNotification({ topicId: currentTopic._id });
-
     const { currentDiscussion } = currentTopic;
     if (currentDiscussion) {
       Router.push(
@@ -69,6 +70,7 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
   }
 
   render() {
+    const { store } = this.props;
     const { currentTeam } = store;
 
     if (!currentTeam || currentTeam.slug !== this.props.teamSlug) {
@@ -89,7 +91,7 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
           </Grid>
 
           <Grid item sm={10} xs={12}>
-            <p>Select or add topic.</p>
+            <div style={{ padding: '0px 0px 0px 20px' }}>Select or add topic.</div>
           </Grid>
         </Grid>
       );
@@ -103,7 +105,7 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
           </Grid>
 
           <Grid item sm={10} xs={12}>
-            <div>loading...</div>
+            <div style={{ padding: '0px 0px 0px 20px' }}>loading...</div>
           </Grid>
         </Grid>
       );
@@ -119,7 +121,7 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
           </Grid>
 
           <Grid item sm={10} xs={12}>
-            <div>No discussions found</div>
+            <div style={{ padding: '0px 0px 0px 20px' }}>No discussions found</div>
           </Grid>
         </Grid>
       );
@@ -132,7 +134,9 @@ class Topic extends React.Component<{ teamSlug: string; topicSlug: string }> {
         </Grid>
 
         <Grid item sm={10} xs={12}>
-          <div>loading...</div>
+          <div style={{ padding: '0px 0px 0px 20px' }}>
+            loading {currentDiscussion.name}...
+          </div>
         </Grid>
       </Grid>
     );
