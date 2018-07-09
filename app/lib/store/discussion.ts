@@ -1,64 +1,63 @@
 import { observable, action, IObservableArray, runInAction, decorate } from 'mobx';
+import NProgress from 'nprogress';
 
 import { getPostList, editDiscussion, addPost, deletePost } from '../api/team-member';
-
-import { Store, Topic, Post } from './index';
+import { Store, Team, Post } from './index';
 
 class Discussion {
   _id: string;
-  topicId: string;
+  createdUserId: string;
   store: Store;
-  topic: Topic;
+  team: Team;
 
   name: string;
   slug: string;
-  isPrivate: boolean;
   memberIds: IObservableArray<string> = observable([]);
   posts: IObservableArray<Post> = observable([]);
-  isInitialPostsLoaded = false;
-  lastActivityDate: Date = new Date();
 
-  private isLoadingPosts = false;
+  isLoadingPosts = false;
 
   constructor(params) {
     this._id = params._id;
-    this.topicId = params.topicId;
+    this.createdUserId = params.createdUserId;
     this.store = params.store;
-    this.topic = params.topic;
+    this.team = params.team;
 
     this.name = params.name;
     this.slug = params.slug;
-    this.isPrivate = !!params.isPrivate;
     this.memberIds.replace(params.memberIds || []);
 
-    if (params.lastActivityDate) {
-      params.lastActivityDate = new Date(params.lastActivityDate);
-    }
-
     if (params.initialPosts) {
+      console.log(`initialPosts: ${params.initialPosts}`);
       this.setInitialPosts(params.initialPosts);
     }
+  }
+
+  get members() {
+    return this.memberIds.map(id => this.team.members.get(id));
   }
 
   setInitialPosts(posts) {
     const postObjs = posts.map(t => new Post({ discussion: this, store: this.store, ...t }));
 
     this.posts.replace(postObjs);
-    this.isInitialPostsLoaded = true;
   }
 
-  async loadInitialPosts() {
-    if (this.isLoadingPosts || this.isInitialPostsLoaded) {
+  async loadPosts() {
+    if (this.isLoadingPosts || this.store.isServer) {
       return;
     }
 
+    NProgress.start();
     this.isLoadingPosts = true;
 
     try {
       const { posts = [] } = await getPostList(this._id);
 
       runInAction(() => {
-        this.setInitialPosts(posts);
+        posts.forEach(t =>
+          this.posts.push(new Post({ discussion: this, store: this.store, ...t })),
+        );
       });
     } catch (error) {
       console.error(error);
@@ -66,6 +65,7 @@ class Discussion {
     } finally {
       runInAction(() => {
         this.isLoadingPosts = false;
+        NProgress.done();
       });
     }
   }
@@ -74,7 +74,6 @@ class Discussion {
     // TODO: remove if current user no longer access to this discussion
 
     this.name = data.name;
-    this.isPrivate = !!data.isPrivate;
     this.memberIds.replace(data.memberIds || []);
   }
 
@@ -135,14 +134,12 @@ class Discussion {
 decorate(Discussion, {
   name: observable,
   slug: observable,
-  isPrivate: observable,
   memberIds: observable,
   posts: observable,
-  isInitialPostsLoaded: observable,
-  lastActivityDate: observable,
+  isLoadingPosts: observable,
 
   setInitialPosts: action,
-  loadInitialPosts: action,
+  loadPosts: action,
   changeLocalCache: action,
   edit: action,
   addPostToLocalCache: action,
