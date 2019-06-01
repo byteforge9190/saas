@@ -1,5 +1,5 @@
 
-FROM node:10-alpine as builder
+FROM node:10-alpine as apibuilder
 
 ARG LOG_LEVEL=error
 ENV NPM_CONFIG_LOGLEVEL ${LOG_LEVEL}
@@ -13,7 +13,7 @@ RUN apk --no-cache add --update --no-progress --virtual builds-deps build-base p
 COPY package.json .
 COPY yarn.lock .
 
-RUN yarn install --ignore-scripts --frozen-lockfile --ignore-optional
+RUN yarn install --force --ignore-scripts --frozen-lockfile --ignore-optional
 
 RUN npm rebuild bcrypt --build-from-source
 
@@ -29,13 +29,15 @@ ENV NODE_ENV ${NODE_ENV}
 ARG PORT=8000
 ENV PORT ${PORT}
 
-WORKDIR /usr/src/app
-COPY --from=builder node_modules node_modules
+WORKDIR /usr/src/api
+COPY --from=apibuilder node_modules node_modules
 COPY . .
 
-RUN yarn build:docker
+RUN yarn build
 
 EXPOSE ${PORT}
 
-USER node
 CMD ["yarn", "start"]
+
+
+# docker build -t saas-boilerplate_api:stable .
