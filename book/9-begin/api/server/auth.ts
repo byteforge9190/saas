@@ -1,97 +1,106 @@
 import * as passport from 'passport';
 import { OAuth2Strategy as Strategy } from 'passport-google-oauth';
-import * as passwordless from 'passwordless';
 
-import sendEmail from './aws-ses';
+// 9
+// import * as passwordless from 'passwordless';
+
+// 9
+// import sendEmail from './aws-ses';
+
 import logger from './logs';
-import getEmailTemplate from './models/EmailTemplate';
+
+// 9
+// import getEmailTemplate from './models/EmailTemplate';
 
 // 10
 // import Invitation from './models/Invitation';
 
 import User, { IUserDocument } from './models/User';
-import PasswordlessMongoStore from './passwordless';
+
+// 9
+// import PasswordlessMongoStore from './passwordless';
 
 import {
-  EMAIL_SUPPORT_FROM_ADDRESS,
+  // 9
+  // EMAIL_SUPPORT_FROM_ADDRESS,
   GOOGLE_CLIENTID,
   GOOGLE_CLIENTSECRET,
   URL_APP,
 } from './consts';
 
-function setupPasswordless({ server, ROOT_URL }) {
-  const mongoStore = new PasswordlessMongoStore();
-  passwordless.init(mongoStore);
+// function setupPasswordless({ server, ROOT_URL }) {
+//   const mongoStore = new PasswordlessMongoStore();
+//   passwordless.init(mongoStore);
 
-  passwordless.addDelivery(async (tokenToSend, uidToSend, recipient, callback) => {
-    try {
-      const template = await getEmailTemplate('login', {
-        loginURL: `${ROOT_URL}/auth/logged_in?token=${tokenToSend}&uid=${encodeURIComponent(
-          uidToSend,
-        )}`,
-      });
+//   passwordless.addDelivery(async (tokenToSend, uidToSend, recipient, callback) => {
+//     try {
+//       const template = await getEmailTemplate('login', {
+//         loginURL: `${ROOT_URL}/auth/logged_in?token=${tokenToSend}&uid=${encodeURIComponent(
+//           uidToSend,
+//         )}`,
+//       });
 
-      logger.debug(template.message);
+//       // logger.debug(template.message);
 
-      await sendEmail({
-        from: `Kelly from async-await.com <${EMAIL_SUPPORT_FROM_ADDRESS}>`,
-        to: [recipient],
-        subject: template.subject,
-        body: template.message,
-      });
+//       await sendEmail({
+//         from: `Kelly from async-await.com <${EMAIL_SUPPORT_FROM_ADDRESS}>`,
+//         to: [recipient],
+//         subject: template.subject,
+//         body: template.message,
+//       });
 
-      callback();
-    } catch (err) {
-      logger.error('Email sending error:', err);
-      callback(err);
-    }
-  });
+//       callback();
+//     } catch (err) {
+//       logger.error('Email sending error:', err);
+//       callback(err);
+//     }
+//   });
 
-  server.use(passwordless.sessionSupport());
-  server.use(passwordless.acceptToken({ successRedirect: URL_APP }));
+//   server.use(passwordless.sessionSupport());
+//   server.use(passwordless.acceptToken({ successRedirect: URL_APP }));
 
-  server.use((req, __, next) => {
-    if (req.user && typeof req.user === 'string') {
-      User.findById(req.user, User.publicFields(), (err, user) => {
-        req.user = user;
-        next(err);
-      });
-    } else {
-      next();
-    }
-  });
+//   server.use((req, __, next) => {
+//     if (req.user && typeof req.user === 'string') {
+//       User.findById(req.user, User.publicFields(), (err, user) => {
+//         req.user = user;
+//         next(err);
+//       });
+//     } else {
+//       next();
+//     }
+//   });
 
-  server.post(
-    '/auth/send-token',
-    passwordless.requestToken(
-      async (email, __, callback) => {
-        try {
-          const user = await User.findOne({ email })
-            .select('_id')
-            .setOptions({ lean: true });
+//   server.post(
+//     '/auth/send-token',
+//     passwordless.requestToken(
+//       async (email, __, callback) => {
+//         try {
+//           const user = await User.findOne({ email })
+//             .select('_id')
+//             .setOptions({ lean: true });
 
-          if (user) {
-            callback(null, user._id);
-          } else {
-            const id = await mongoStore.storeOrUpdateByEmail(email);
-            callback(null, id);
-          }
-        } catch (error) {
-          callback(error);
-        }
-      },
-      { userField: 'email' },
-    ),
-    (__, res) => {
-      res.json({ done: 1 });
-    },
-  );
+//           if (user) {
+//             callback(null, user._id);
+//           } else {
+//             const id = await mongoStore.storeOrUpdateByEmail(email);
+//             callback(null, id);
+//           }
+//         } catch (error) {
+//           callback(error);
+//         }
+//       },
+//       { userField: 'email' },
+//     ),
+//     (__, res) => {
+//       res.json({ done: 1 });
+//     },
+//   );
 
-  server.get('/logout', passwordless.logout(), (req, res) => {
-    req.logout();
-    res.redirect(`${URL_APP}/login`);
-  });
-}
+//   server.get('/logout', passwordless.logout(), (req, res) => {
+//     req.logout();
+//     res.redirect(`${URL_APP}/login`);
+//   });
+// }
 
 function setupGoogle({ ROOT_URL, server }) {
   if (!GOOGLE_CLIENTID) {
@@ -162,11 +171,12 @@ function setupGoogle({ ROOT_URL, server }) {
       req.session.next_url = null;
     }
 
-    if (req.query && req.query.invitationToken) {
-      req.session.invitationToken = req.query.invitationToken;
-    } else {
-      req.session.invitationToken = null;
-    }
+    // 10
+    // if (req.query && req.query.invitationToken) {
+    //   req.session.invitationToken = req.query.invitationToken;
+    // } else {
+    //   req.session.invitationToken = null;
+    // }
 
     passport.authenticate('google', options)(req, res, next);
   });
@@ -189,12 +199,13 @@ function setupGoogle({ ROOT_URL, server }) {
       if (req.user && req.session.next_url) {
         redirectUrlAfterLogin = req.session.next_url;
       } else {
-        if (!req.user.defaultTeamSlug) {
-          // 10
-          // redirectUrlAfterLogin = '/create-team';
+        redirectUrlAfterLogin = '/your-settings';
 
-          redirectUrlAfterLogin = '/your-settings';
-        }
+        // 10
+        // if (!req.user.defaultTeamSlug) {
+        //   redirectUrlAfterLogin = '/create-team';
+        // }
+
         // 12
         // if (!req.user.defaultTeamSlug) {
         //   redirectUrlAfterLogin = '/create-team';
@@ -206,6 +217,14 @@ function setupGoogle({ ROOT_URL, server }) {
       res.redirect(`${URL_APP}${redirectUrlAfterLogin}`);
     },
   );
+
+  server.get('/logout', (req, res) => {
+    req.logout();
+    res.redirect('/login');
+  });
 }
 
-export { setupPasswordless, setupGoogle };
+export { setupGoogle };
+
+// 9
+// export { setupPasswordless, setupGoogle };

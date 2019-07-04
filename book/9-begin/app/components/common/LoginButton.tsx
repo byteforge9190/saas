@@ -4,8 +4,10 @@ import React from 'react';
 
 import { makeQueryString } from '../../lib/api/makeQueryString';
 
-import { sendLoginToken } from '../../lib/api/public';
-import notify from '../../lib/notifier';
+// 9
+// import { sendLoginToken } from '../../lib/api/public';
+// import notify from '../../lib/notifier';
+
 import { styleLoginButton } from '../../lib/sharedStyles';
 
 import { URL_API } from '../../lib/consts';
@@ -13,16 +15,24 @@ import { URL_API } from '../../lib/consts';
 // TS errors: https://github.com/mui-org/material-ui/issues/8198
 
 class LoginButton extends React.PureComponent<
-  { next?: string; invitationToken?: string },
+  { next?: string },
+  // 10
+  // { next?: string; invitationToken?: string },
   { email: string }
   > {
   public state = { email: '' };
 
   public render() {
-    const { next, invitationToken } = this.props;
+    const { next } = this.props;
+
+    // 10
+    // const { next, invitationToken } = this.props;
 
     let url = `${URL_API}/auth/google`;
-    const qs = makeQueryString({ next, invitationToken });
+    const qs = makeQueryString({ next });
+
+    // 10
+    // const qs = makeQueryString({ next, invitationToken });
 
     if (qs) {
       url += `?${qs}`;
@@ -39,7 +49,8 @@ class LoginButton extends React.PureComponent<
         </Button>
         <p />
         <br />
-        <hr style={{ width: '60px' }} /> <h4>OR</h4> <hr style={{ width: '60px' }} />
+        {/* 9 */}
+        {/* <hr style={{ width: '60px' }} /> <h4>OR</h4> <hr style={{ width: '60px' }} />
         <p />
         <br />
         <div>
@@ -61,27 +72,28 @@ class LoginButton extends React.PureComponent<
           </form>
           <br />
           <p />
-        </div>
+        </div> */}
       </React.Fragment>
     );
   }
 
-  private onSubmit = async event => {
-    event.preventDefault();
-    const { email } = this.state;
+  // 9
+  // private onSubmit = async event => {
+  //   event.preventDefault();
+  //   const { email } = this.state;
 
-    if (!email) {
-      notify('Email is required');
-    }
+  //   if (!email) {
+  //     notify('Email is required');
+  //   }
 
-    try {
-      await sendLoginToken(email);
-      this.setState({ email: '' });
-      notify('We emailed you a login link.');
-    } catch (error) {
-      notify(error);
-    }
-  };
+  //   try {
+  //     await sendLoginToken(email);
+  //     this.setState({ email: '' });
+  //     notify('We emailed you a login link.');
+  //   } catch (error) {
+  //     notify(error);
+  //   }
+  // };
 }
 
 export default LoginButton;

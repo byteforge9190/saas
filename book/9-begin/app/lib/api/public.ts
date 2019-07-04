@@ -25,7 +25,8 @@ export const getUser = (options = {}) =>
 //     body: JSON.stringify({ token }),
 //   });
 
-export const sendLoginToken = (email: string) =>
-  sendRequestAndGetResponse('/auth/send-token', {
-    body: JSON.stringify({ email }),
-  });
+// 9
+// export const sendLoginToken = (email: string) =>
+//   sendRequestAndGetResponse('/auth/send-token', {
+//     body: JSON.stringify({ email }),
+//   });

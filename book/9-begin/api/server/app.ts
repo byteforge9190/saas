@@ -12,7 +12,12 @@ import * as mongoose from 'mongoose';
 import * as path from 'path';
 
 import api from './api';
-import { setupGoogle, setupPasswordless } from './auth';
+
+import { setupGoogle } from './auth';
+
+// 9
+// import { setupGoogle, setupPasswordless } from './auth';
+
 import { signRequestForLoad } from './aws-s3';
 // 13
 // import { setup as realtime } from './realtime';
@@ -77,7 +82,9 @@ const sessionMiddleware = session(sessionOptions);
 server.use(sessionMiddleware);
 
 setupGoogle({ server, ROOT_URL });
-setupPasswordless({ server, ROOT_URL });
+
+// 9
+// setupPasswordless({ server, ROOT_URL });
 
 api(server);
 
