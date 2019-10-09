@@ -6,6 +6,5 @@
         "class-properties": { "loose": true }
       }
     ],
-    "@zeit/next-typescript/babel"
   ]
 }
