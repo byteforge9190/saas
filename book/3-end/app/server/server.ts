@@ -12,16 +12,15 @@ app.prepare().then(() => {
 
   // give all Nextjs's request to Nextjs before anything else
   server.get('/_next/*', (req, res) => {
-    console.log('next server, page');
+    // console.log('next server, page');
     handle(req, res);
   });
 
   server.use(express.json());
 
-  server.get('/api/v1/public/get-user', (_, res) => {
-    console.log('API server got request from APP server');
-    res.json({ user: { email: 'team@builderbook.org' } });
-  });
+  // server.get('/api/v1/public/get-user', (_, res) => {
+  //   res.json({ user: { email: 'team@builderbook.org' } });
+  // });
 
   server.all('*', (req, res) => {
     handle(req, res);

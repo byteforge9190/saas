@@ -6,7 +6,7 @@ const server = express();
 server.use(express.json());
 
 server.get('/api/v1/public/get-user', (_, res) => {
-  console.log('express server, user object');
+  console.log('API server got request from APP server');
   res.json({ user: { email: 'team@builderbook.org' } });
 });
 
