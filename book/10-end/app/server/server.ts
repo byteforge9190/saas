@@ -1,6 +1,10 @@
 import express from 'express';
 import next from 'next';
 
+import { getUserApiMethod } from '../lib/api/public';
+
+import setupSitemapAndRobots from './setupSitemapAndRobots';
+
 import routesWithCache from './routesWithCache';
 
 const dev = process.env.NODE_ENV !== 'production';
@@ -47,9 +51,36 @@ app.prepare().then(() => {
     app.render(req, res, '/login');
   });
 
+  setupSitemapAndRobots({ server });
+
   routesWithCache({ server, app });
 
-  server.all('*', (req, res) => {
+  server.use(async (req: any, _, nextfn) => {
+    const headers: any = {};
+    if (req.headers && req.headers.cookie) {
+      headers.cookie = req.headers.cookie;
+    }
+
+    try {
+      const { user } = await getUserApiMethod({ headers });
+      req.user = user;
+    } catch (error) {
+      console.log(error);
+    }
+
+    nextfn();
+  });
+
+  server.all('/', (req: any, res) => {
+    if (!req.user) {
+      res.redirect(`${dev ? process.env.URL_APP : process.env.PRODUCTION_URL_APP}/login`);
+      handle(req, res);
+    } else {
+      handle(req, res);
+    }
+  });
+
+  server.get('*', (req, res) => {
     handle(req, res);
   });
 
@@ -57,6 +88,6 @@ app.prepare().then(() => {
     if (err) {
       throw err;
     }
-    console.log(`> Ready on ${process.env.URL_APP}`);
+    console.log(`> Ready on ${dev ? process.env.URL_APP : process.env.PRODUCTION_URL_APP}`);
   });
 });
